@@ -276,14 +276,14 @@ signoffCommits = true
 ```
 
 The version information given in the patterns above can be in two formats:
-1. just a `version` field that is treated as a prefix of the version, or as `change` if it is one of the `change` values
+1. just a `version` field that is treated as a prefix of the version, or as `change` if it is
+   `major`, `minor`, `patch`, `pre-release` or `build-metadata`
 2. a structure consisting of any of the following fields:
    * `prefix`: is matched against the beginning of the version
    * `suffix`: is matched against the end of the version
    * `exact`: is matched against the whole version
    * `contains`: is matched against substrings in the version
-   * `change`: is matched against the kind of update like the `version` filter of `pullRequests.grouping`:
-     `major`, `minor`, `patch`, `pre-release` or `build-metadata`
+   * `change`: is matched against the kind of update, like the `version` filter of `pullRequests.grouping`
 
 ```properties
 version = "1.1."

@@ -580,7 +580,7 @@ class FilterAlgTest extends FunSuite {
     assertEquals(FilterAlg.localFilter(minor, config, currentTime), Right(minor.asSoleUpdate))
   }
 
-  test("dependencyOverrides can override cooldown for major updates") {
+  test("dependencyOverrides can set a cooldown for major updates") {
     val config = RepoConfig(
       dependencyOverrides = List(
         GroupRepoConfig(

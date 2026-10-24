@@ -44,13 +44,9 @@ object VersionPattern {
     Eq.fromUniversalEquals
 
   implicit val versionPatternDecoder: Decoder[VersionPattern] =
-    Decoder[String]
-      .map { s =>
-        SemVer.Change.from(s) match {
-          case Right(change) => VersionPattern(change = Some(change))
-          case Left(_)       => VersionPattern(prefix = Some(s))
-        }
-      }
+    Decoder[SemVer.Change]
+      .map(change => VersionPattern(change = Some(change)))
+      .or(Decoder[String].map(s => VersionPattern(prefix = Some(s))))
       .or(deriveDecoder[VersionPattern])
 
   implicit val versionPatternEncoder: Encoder[VersionPattern] = {

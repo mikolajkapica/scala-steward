@@ -52,7 +52,11 @@ class RepoConfigAlgTest extends FunSuite {
          |                 { groupId = "eu.timepit", artifactId = "refined.3", version = { suffix="jre" } },
          |                 { groupId = "eu.timepit", artifactId = "refined.4", version = { prefix="0.8.", suffix="jre" } }
          |               ]
-         |updates.ignore = [ { groupId = "org.acme", version = "1.0" }, { groupId = "*", version = "major" } ]
+         |updates.ignore = [
+         |  { groupId = "org.acme", version = "1.0" },
+         |  { groupId = "*", version = "major" },
+         |  { groupId = "eu.timepit", version = { prefix = "0.", change = "minor" } }
+         |]
          |updates.allowPreReleases = [ { groupId = "eu.timepit" } ]
          |updates.limit = 4
          |updates.fileExtensions = [ ".txt" ]
@@ -150,7 +154,12 @@ class RepoConfigAlgTest extends FunSuite {
         ).some,
         ignore = List(
           UpdatePattern("org.acme".g, None, Some(VersionPattern(Some("1.0")))),
-          UpdatePattern("*".g, None, Some(VersionPattern(change = SemVer.Change.Major.some)))
+          UpdatePattern("*".g, None, Some(VersionPattern(change = SemVer.Change.Major.some))),
+          UpdatePattern(
+            "eu.timepit".g,
+            None,
+            Some(VersionPattern(prefix = "0.".some, change = SemVer.Change.Minor.some))
+          )
         ).some,
         allowPreReleases = List(UpdatePattern("eu.timepit".g, None, None)).some,
         limit = Some(NonNegInt.unsafeFrom(4)),
