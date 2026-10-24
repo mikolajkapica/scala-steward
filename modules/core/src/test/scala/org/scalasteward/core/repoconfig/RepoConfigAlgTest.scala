@@ -52,7 +52,7 @@ class RepoConfigAlgTest extends FunSuite {
          |                 { groupId = "eu.timepit", artifactId = "refined.3", version = { suffix="jre" } },
          |                 { groupId = "eu.timepit", artifactId = "refined.4", version = { prefix="0.8.", suffix="jre" } }
          |               ]
-         |updates.ignore = [ { groupId = "org.acme", version = "1.0" } ]
+         |updates.ignore = [ { groupId = "org.acme", version = "1.0" }, { groupId = "*", version = "major" } ]
          |updates.allowPreReleases = [ { groupId = "eu.timepit" } ]
          |updates.limit = 4
          |updates.fileExtensions = [ ".txt" ]
@@ -148,7 +148,10 @@ class RepoConfigAlgTest extends FunSuite {
             Some(VersionPattern(Some("0.8."), Some("jre")))
           )
         ).some,
-        ignore = List(UpdatePattern("org.acme".g, None, Some(VersionPattern(Some("1.0"))))).some,
+        ignore = List(
+          UpdatePattern("org.acme".g, None, Some(VersionPattern(Some("1.0")))),
+          UpdatePattern("*".g, None, Some(VersionPattern(change = SemVer.Change.Major.some)))
+        ).some,
         allowPreReleases = List(UpdatePattern("eu.timepit".g, None, None)).some,
         limit = Some(NonNegInt.unsafeFrom(4)),
         fileExtensions = Some(List(".txt"))
@@ -188,42 +191,6 @@ class RepoConfigAlgTest extends FunSuite {
       reviewers = List("scala.steward").some
     )
     assertEquals(obtained, expected)
-  }
-
-  test("config with version change patterns") {
-    val content =
-      """|updates.ignore = [ { groupId = "org.typelevel", version = "major" } ]
-         |dependencyOverrides = [
-         |  {
-         |    dependency = { groupId = "org.typelevel", version = "minor" },
-         |    pullRequests = {},
-         |    cooldown = { minimumAge = "30 days" }
-         |  }
-         |]
-         |""".stripMargin
-    val config = RepoConfigAlg.parseRepoConfig(content)
-    val expected = RepoConfig(
-      updates = UpdatesConfig(ignore =
-        List(
-          UpdatePattern(
-            "org.typelevel".g,
-            None,
-            Some(VersionPattern(change = SemVer.Change.Major.some))
-          )
-        ).some
-      ).some,
-      dependencyOverrides = List(
-        GroupRepoConfig(
-          cooldown = CooldownConfig(30.days).some,
-          dependency = UpdatePattern(
-            "org.typelevel".g,
-            None,
-            Some(VersionPattern(change = SemVer.Change.Minor.some))
-          )
-        )
-      ).some
-    )
-    assertEquals(config, Right(expected))
   }
 
   test("config with 'updatePullRequests = false'") {

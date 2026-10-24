@@ -144,7 +144,6 @@ updates.pin  = [ { groupId = "com.example", artifactId="foo", version = "1.1." }
 # Defaults to empty `[]` which mean Scala Steward will not ignore dependencies.
 updates.ignore = [
   { groupId = "org.acme", artifactId="foo", version = "1.0" },
-  # Ignore major updates of all dependencies
   { groupId = "*", version = "major" }
 ]
 
@@ -250,12 +249,6 @@ dependencyOverrides = [
   {
     dependency = { groupId = "com.example" },
     pullRequests = { frequency = "14 days" },
-  },
-  # Wait longer before major updates of this group
-  {
-    dependency = { groupId = "org.example", version = "major" },
-    pullRequests = {},
-    cooldown = { minimumAge = "14 days" },
   }
 ]
 
@@ -295,17 +288,14 @@ println("```")
 ```
 
 The version information given in the patterns above can be in two formats:
-1. just a `version` field that is treated as a prefix of the version, unless it is one of
-   `major`, `minor`, `patch`, `pre-release` or `build-metadata`, which is treated as `change`
+1. just a `version` field that is treated as a prefix of the version, or as `change` if it is one of the `change` values
 2. a structure consisting of any of the following fields:
    * `prefix`: is matched against the beginning of the version
    * `suffix`: is matched against the end of the version
    * `exact`: is matched against the whole version
    * `contains`: is matched against substrings in the version
-   * `change`: is matched against the kind of update from the current version:
-     `major`, `minor`, `patch`, `pre-release` or `build-metadata`. Versions are
-     compared with early semver, like the `version` filter of `pullRequests.grouping`,
-     so `0.23.1` to `0.23.2` is a `minor` update. Versions that aren't semver never match.
+   * `change`: is matched against the kind of update like the `version` filter of `pullRequests.grouping`:
+     `major`, `minor`, `patch`, `pre-release` or `build-metadata`
 
 ```properties
 version = "1.1."
@@ -314,7 +304,7 @@ version = { suffix = "jre8" }
 version = { prefix = "1.1.", suffix = "jre8" }
 version = { exact = "1.1.2.jre8" }
 version = { contains = "feature" }
-version = "minor"
+version = { change = "major" }
 ```
 
 ## Ignore lines

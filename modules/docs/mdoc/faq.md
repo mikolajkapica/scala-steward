@@ -39,17 +39,6 @@ updates.pin = [
 ]
 ```
 
-Instead of a version prefix, `version` can also be the kind of update: `major`,
-`minor`, `patch`, `pre-release` or `build-metadata`. Unlike a prefix, it doesn't
-need to be changed after you update a dependency:
-
-```properties
-updates.ignore = [
-  # Ignore major updates of all dependencies
-  { groupId = "*", version = "major" }
-]
-```
-
 Updates for `sbt` and `scalafmt` can be controlled by using the following `groupId` and `artifactId`:
 ```properties
 { groupId = "org.scala-sbt", artifactId = "sbt" }

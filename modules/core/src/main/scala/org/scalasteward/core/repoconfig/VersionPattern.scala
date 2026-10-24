@@ -56,9 +56,7 @@ object VersionPattern {
   implicit val versionPatternEncoder: Encoder[VersionPattern] = {
     val vpEncoder = deriveEncoder[VersionPattern]
     Encoder.instance {
-      case VersionPattern(Some(prefix), None, None, None, None)
-          if SemVer.Change.from(prefix).isLeft =>
-        Encoder[String].apply(prefix)
+      case VersionPattern(Some(prefix), None, None, None, None) => Encoder[String].apply(prefix)
       case VersionPattern(None, None, None, None, Some(change)) =>
         Encoder[SemVer.Change].apply(change)
       case vp => vpEncoder(vp)

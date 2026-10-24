@@ -43,9 +43,7 @@ object SemVer {
     case object PreRelease extends Change("pre-release")
     case object BuildMetadata extends Change("build-metadata")
 
-    val all: List[Change] = List(Major, Minor, Patch, PreRelease, BuildMetadata)
-
-    final private val allowed = all
+    final private val allowed = List(Major, Minor, Patch, PreRelease, BuildMetadata)
       .map(change => s"`${change.render}`")
       .mkString(", ")
 
