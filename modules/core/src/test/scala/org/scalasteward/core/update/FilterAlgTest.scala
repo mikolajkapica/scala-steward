@@ -25,7 +25,8 @@ import org.scalasteward.core.data.{
   ArtifactForUpdate,
   ArtifactUpdateCandidates,
   CrossDependency,
-  GroupId
+  GroupId,
+  SemVer
 }
 import org.scalasteward.core.mock.MockContext.context.filterAlg
 import org.scalasteward.core.mock.MockState.TraceEntry.Log
@@ -34,7 +35,7 @@ import org.scalasteward.core.repoconfig.*
 import org.scalasteward.core.update.FilterAlg.*
 import org.scalasteward.core.util.{Nel, Timestamp}
 
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 class FilterAlgTest extends FunSuite {
   private val config = RepoConfig.empty
@@ -561,5 +562,113 @@ class FilterAlgTest extends FunSuite {
       )).single
 
     assertEquals(FilterAlg.localFilter(update, config, Timestamp(10)), Right(expected.asSoleUpdate))
+  }
+
+  test("ignore updates by kind via version change") {
+    val config = RepoConfig(updates =
+      UpdatesConfig(ignore =
+        List(
+          UpdatePattern(
+            "*".g,
+            None,
+            Some(VersionPattern(change = SemVer.Change.Major.some))
+          )
+        ).some
+      ).some
+    )
+
+    val update = ("org.typelevel".g % "cats-core".a % "2.10.0" %> Nel.of("2.10.1", "3.0.0")).single
+    assertEquals(
+      FilterAlg.localFilter(update, config, currentTime),
+      Right(update.asSpecificUpdate("2.10.1".v))
+    )
+
+    val majorOnly = ("org.typelevel".g % "cats-effect".a % "3.6.3" %> Nel.of("4.0.0")).single
+    assertEquals(
+      FilterAlg.localFilter(majorOnly, config, currentTime),
+      Left(IgnoredByConfig(majorOnly))
+    )
+  }
+
+  test("pin updates by kind via version change") {
+    val config = RepoConfig(updates =
+      UpdatesConfig(pin =
+        List(
+          UpdatePattern(
+            "org.typelevel".g,
+            None,
+            Some(VersionPattern(change = SemVer.Change.Patch.some))
+          )
+        ).some
+      ).some
+    )
+
+    val update = ("org.typelevel".g % "cats-core".a % "2.10.0" %> Nel.of("2.10.1", "2.11.0")).single
+    assertEquals(
+      FilterAlg.localFilter(update, config, currentTime),
+      Right(update.asSpecificUpdate("2.10.1".v))
+    )
+
+    val minorOnly = ("org.typelevel".g % "cats-effect".a % "3.6.3" %> Nel.of("3.7.0")).single
+    assertEquals(
+      FilterAlg.localFilter(minorOnly, config, currentTime),
+      Left(VersionPinnedByConfig(minorOnly))
+    )
+  }
+
+  test("dependencyOverrides can set a cooldown per version change") {
+    def overrideFor(change: SemVer.Change, minimumAge: FiniteDuration) =
+      GroupRepoConfig(
+        cooldown = CooldownConfig(minimumAge).some,
+        dependency =
+          UpdatePattern("org.typelevel".g, None, Some(VersionPattern(change = change.some)))
+      )
+    val config = RepoConfig(
+      updates = UpdatesConfig(cooldown = CooldownConfig(3.millis).some).some,
+      dependencyOverrides = List(
+        overrideFor(SemVer.Change.Minor, 30.millis),
+        overrideFor(SemVer.Change.Major, 50.millis)
+      ).some
+    )
+
+    val patch =
+      ("org.typelevel".g % "cats-core".a % "2.10.0" %> VersionWithFirstSeen(
+        "2.10.1".v,
+        Some(Timestamp(80))
+      )).single
+    assertEquals(
+      FilterAlg.localFilter(patch, config, Timestamp(100)),
+      Right(patch.asSoleUpdate)
+    )
+
+    val minorOrMajor = ArtifactUpdateCandidates(
+      ArtifactForUpdate(CrossDependency("org.typelevel".g % "cats-core".a % "2.10.1")),
+      Nel.of(
+        VersionWithFirstSeen("2.11.0".v, Some(Timestamp(80))),
+        VersionWithFirstSeen("3.0.0".v, Some(Timestamp(80)))
+      )
+    )
+    assertEquals(
+      FilterAlg.localFilter(minorOrMajor, config, Timestamp(100)),
+      Left(TooRecentForCooldown(minorOrMajor))
+    )
+    assertEquals(
+      FilterAlg.localFilter(minorOrMajor, config, Timestamp(120)),
+      Right(minorOrMajor.asSpecificUpdate("2.11.0".v))
+    )
+
+    val major =
+      ("org.typelevel".g % "cats-core".a % "2.11.0" %> VersionWithFirstSeen(
+        "3.0.0".v,
+        Some(Timestamp(80))
+      )).single
+    assertEquals(
+      FilterAlg.localFilter(major, config, Timestamp(120)),
+      Left(TooRecentForCooldown(major))
+    )
+    assertEquals(
+      FilterAlg.localFilter(major, config, Timestamp(140)),
+      Right(major.asSoleUpdate)
+    )
   }
 }

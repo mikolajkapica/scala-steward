@@ -40,9 +40,7 @@ final case class PullRequestUpdateFilter private (
   private lazy val artifactRegex = artifact.map(wildcardRegex)
 
   private def isMatchedVersion(versionType: SemVer.Change, update: Update.ForArtifactId): Boolean =
-    (SemVer.parse(update.currentVersion.value), SemVer.parse(update.nextVersion.value)).tupled
-      .flatMap { case (current, next) => SemVer.getChangeEarly(current, next) }
-      .exists(_.render === versionType.render)
+    update.versionUpdate.changeEarly.contains(versionType)
 
 }
 

@@ -125,6 +125,11 @@ object Version {
   case class Update(currentVersion: Version, nextVersion: Version) {
     def obeysCoursierOrdering: Boolean =
       coursier.version.Version(nextVersion.value) >= coursier.version.Version(currentVersion.value)
+
+    def changeEarly: Option[SemVer.Change] =
+      (SemVer.parse(currentVersion.value), SemVer.parse(nextVersion.value)).tupled.flatMap {
+        case (current, next) => SemVer.getChangeEarly(current, next)
+      }
   }
 
   def show(versions: Version*): String = {

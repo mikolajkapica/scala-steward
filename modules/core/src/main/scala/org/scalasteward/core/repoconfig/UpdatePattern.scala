@@ -53,9 +53,10 @@ object UpdatePattern {
     val byGroupId = patterns.filter(_.matchesGroupId(artifactForUpdate.groupId))
     val byArtifactId =
       byGroupId.filter(_.artifactId.forall(_ === artifactForUpdate.artifactId.name))
-    val filteredVersions = update.refersToUpdateVersions.filter(newVersion =>
-      byArtifactId.exists(_.version.forall(_.matches(newVersion.value))) === include
-    )
+    val filteredVersions = update.refersToUpdateVersions.filter { newVersion =>
+      val versionUpdate = Version.Update(artifactForUpdate.currentVersion, newVersion)
+      byArtifactId.exists(_.version.forall(_.matches(versionUpdate))) === include
+    }
     MatchResult(byArtifactId, filteredVersions.toSet)
   }
 

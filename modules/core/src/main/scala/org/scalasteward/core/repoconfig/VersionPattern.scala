@@ -20,22 +20,23 @@ import cats.Eq
 import cats.syntax.all.*
 import io.circe.generic.semiauto.*
 import io.circe.{Decoder, Encoder}
+import org.scalasteward.core.data.{SemVer, Version}
 
 final case class VersionPattern(
     prefix: Option[String] = None,
     suffix: Option[String] = None,
     exact: Option[String] = None,
-    contains: Option[String] = None
+    contains: Option[String] = None,
+    change: Option[SemVer.Change] = None
 ) {
-  def matches(version: String): Boolean =
+  def matches(update: Version.Update): Boolean = {
+    val version = update.nextVersion.value
     prefix.forall(version.startsWith) &&
-      suffix.forall(version.endsWith) &&
-      exact.forall(_ === version) &&
-      contains.forall(version.contains)
-
-  /** Returns `true` if only `prefix` is defined. */
-  private def isPrefixPattern: Boolean =
-    prefix.isDefined && suffix.isEmpty && exact.isEmpty && contains.isEmpty
+    suffix.forall(version.endsWith) &&
+    exact.forall(_ === version) &&
+    contains.forall(version.contains) &&
+    change.forall(update.changeEarly.contains)
+  }
 }
 
 object VersionPattern {
@@ -43,11 +44,24 @@ object VersionPattern {
     Eq.fromUniversalEquals
 
   implicit val versionPatternDecoder: Decoder[VersionPattern] =
-    deriveDecoder[VersionPattern].or(Decoder[String].map(s => VersionPattern(prefix = Some(s))))
+    Decoder[String]
+      .map { s =>
+        SemVer.Change.from(s) match {
+          case Right(change) => VersionPattern(change = Some(change))
+          case Left(_)       => VersionPattern(prefix = Some(s))
+        }
+      }
+      .or(deriveDecoder[VersionPattern])
 
   implicit val versionPatternEncoder: Encoder[VersionPattern] = {
-    val prefixEncoder = Encoder.encodeOption[String]
     val vpEncoder = deriveEncoder[VersionPattern]
-    Encoder.instance(vp => if (vp.isPrefixPattern) prefixEncoder(vp.prefix) else vpEncoder(vp))
+    Encoder.instance {
+      case VersionPattern(Some(prefix), None, None, None, None)
+          if SemVer.Change.from(prefix).isLeft =>
+        Encoder[String].apply(prefix)
+      case VersionPattern(None, None, None, None, Some(change)) =>
+        Encoder[SemVer.Change].apply(change)
+      case vp => vpEncoder(vp)
+    }
   }
 }

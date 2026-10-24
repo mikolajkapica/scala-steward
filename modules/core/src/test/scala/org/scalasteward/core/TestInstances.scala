@@ -157,9 +157,12 @@ object TestInstances {
     Arbitrary(for {
       groupId <- Arbitrary.arbitrary[String].map(GroupId.apply)
       artifactId <- Arbitrary.arbitrary[Option[String]]
-      version <- Arbitrary
-        .arbitrary[Option[String]]
-        .map(_.map(prefix => VersionPattern(prefix = Some(prefix))))
+      version <- Gen.option(
+        Gen.oneOf(
+          Arbitrary.arbitrary[String].map(prefix => VersionPattern(prefix = Some(prefix))),
+          Gen.oneOf(SemVer.Change.all).map(change => VersionPattern(change = Some(change)))
+        )
+      )
     } yield UpdatePattern(groupId = groupId, artifactId = artifactId, version = version))
 
   private def smallListOf[A](maxSize: Int, genA: Gen[A]): Gen[List[A]] =

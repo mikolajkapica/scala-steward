@@ -190,6 +190,42 @@ class RepoConfigAlgTest extends FunSuite {
     assertEquals(obtained, expected)
   }
 
+  test("config with version change patterns") {
+    val content =
+      """|updates.ignore = [ { groupId = "org.typelevel", version = "major" } ]
+         |dependencyOverrides = [
+         |  {
+         |    dependency = { groupId = "org.typelevel", version = "minor" },
+         |    pullRequests = {},
+         |    cooldown = { minimumAge = "30 days" }
+         |  }
+         |]
+         |""".stripMargin
+    val config = RepoConfigAlg.parseRepoConfig(content)
+    val expected = RepoConfig(
+      updates = UpdatesConfig(ignore =
+        List(
+          UpdatePattern(
+            "org.typelevel".g,
+            None,
+            Some(VersionPattern(change = SemVer.Change.Major.some))
+          )
+        ).some
+      ).some,
+      dependencyOverrides = List(
+        GroupRepoConfig(
+          cooldown = CooldownConfig(30.days).some,
+          dependency = UpdatePattern(
+            "org.typelevel".g,
+            None,
+            Some(VersionPattern(change = SemVer.Change.Minor.some))
+          )
+        )
+      ).some
+    )
+    assertEquals(config, Right(expected))
+  }
+
   test("config with 'updatePullRequests = false'") {
     val content = "updatePullRequests = false"
     val config = RepoConfigAlg.parseRepoConfig(content)
