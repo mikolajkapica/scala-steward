@@ -154,6 +154,9 @@ updates.ignore = [
 # the artefact version's age from that time.
 updates.cooldown = {
   minimumAge: "7 days"
+  # Updates that avoid a known vulnerability skip cooldown when Scala Steward runs with `--enable-vulnerability-check`.
+  # Default: true
+  skipForVulnerabilityCheck = true
 }
 
 # The dependencies which match the given pattern are retracted. Their existing pull-request will be closed.
@@ -175,6 +178,11 @@ updates.retracted = [
 # Each pattern must have `groupId`, and may have `artifactId` and `version`.
 # Defaults to empty `[]` which mean Scala Steward will ignore all stable to pre-release update options.
 updates.allowPreReleases  = [ { groupId = "com.example", artifactId="foo" } ]
+
+# If true, Scala Steward will also update projects on a Scala LTS version to Scala Next versions.
+# If false, projects on a Scala LTS version only get updates to other Scala LTS versions.
+# Default: false
+updates.allowScalaNext = true
 
 # If set, Scala Steward will only create or update `n` PRs each time it runs (see `pullRequests.frequency` above).
 # Useful if running frequently and/or CI build are costly
@@ -252,7 +260,7 @@ dependencyOverrides = [
   }
 ]
 
-# The dependencies which match the given patterns are never sent to api.osv.dev
+# The dependencies which match the given patterns are never sent to the OSV API
 # when the instance runs with --enable-vulnerability-check.
 #
 # Each pattern must have `groupId`, and may have `artifactId` (without the Scala suffix).

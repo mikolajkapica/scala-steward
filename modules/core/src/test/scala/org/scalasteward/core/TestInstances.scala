@@ -137,7 +137,7 @@ object TestInstances {
     } yield PullRequestsConfig(frequency, frequencySpread, allowedHours))
 
   implicit val cooldownConfigArbitrary: Arbitrary[CooldownConfig] =
-    Arbitrary(Arbitrary.arbitrary[FiniteDuration].map(CooldownConfig.apply))
+    Arbitrary(Arbitrary.arbitrary[FiniteDuration].map(CooldownConfig(_)))
 
   implicit val pullRequestUpdateStrategyArbitrary: Arbitrary[PullRequestUpdateStrategy] =
     Arbitrary(
@@ -175,6 +175,7 @@ object TestInstances {
         limit <- Arbitrary.arbitrary[Option[NonNegInt]]
         fileExtensions <- Arbitrary.arbitrary[Option[List[String]]]
         cooldown <- Arbitrary.arbitrary[Option[CooldownConfig]]
+        allowScalaNext <- Arbitrary.arbitrary[Option[Boolean]]
       } yield UpdatesConfig(
         pin = Some(pin),
         allow = Some(allow),
@@ -182,7 +183,8 @@ object TestInstances {
         ignore = Some(ignore),
         limit = limit,
         fileExtensions = fileExtensions,
-        cooldown = cooldown
+        cooldown = cooldown,
+        allowScalaNext = allowScalaNext
       )
     )
 

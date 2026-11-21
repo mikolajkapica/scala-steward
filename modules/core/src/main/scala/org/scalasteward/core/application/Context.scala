@@ -176,7 +176,6 @@ object Context {
       implicit val urlChecker: UrlChecker[F] = urlChecker0
       implicit val dateTimeAlg: DateTimeAlg[F] = DateTimeAlg.create[F]
       implicit val repoConfigAlg: RepoConfigAlg[F] = new RepoConfigAlg[F](maybeGlobalRepoConfig)
-      implicit val filterAlg: FilterAlg[F] = new FilterAlg[F]
       implicit val gitAlg: GitAlg[F] = GenGitAlg.create[F](config)
       implicit val hookExecutor: HookExecutor[F] = new HookExecutor[F]
       implicit val repoCacheRepository: RepoCacheRepository[F] =
@@ -186,9 +185,11 @@ object Context {
       implicit val forgeRepoAlg: ForgeRepoAlg[F] = new ForgeRepoAlg[F](config)
       implicit val forgeCfg: ForgeCfg = config.forgeCfg
       implicit val updateInfoUrlFinder: UpdateInfoUrlFinder[F] = new UpdateInfoUrlFinder[F]
-      implicit val osvAlg: OsvAlg[F] = new OsvAlg[F]
+      implicit val osvAlg: OsvAlg[F] = new OsvAlg[F](config.osvApiHost)
       implicit val osvCache: OsvCache[F] =
         new OsvCache[F](config.cacheTtl, osvIdsStore, osvVulnerabilityStore)
+      implicit val coursierAlg: CoursierAlg[F] = CoursierAlg.create[F]
+      implicit val filterAlg: FilterAlg[F] = new FilterAlg[F](config.enableVulnerabilityCheck)
       implicit val pullRequestRepository: PullRequestRepository[F] =
         new PullRequestRepository[F](pullRequestsStore)
       implicit val pullRequestService: PullRequestService[F] =
@@ -196,7 +197,6 @@ object Context {
       implicit val scalafixCli: ScalafixCli[F] = new ScalafixCli[F]
       implicit val scalafmtAlg: ScalafmtAlg[F] = new ScalafmtAlg[F](config.defaultResolvers)
       implicit val selfCheckAlg: SelfCheckAlg[F] = new SelfCheckAlg[F](config)
-      implicit val coursierAlg: CoursierAlg[F] = CoursierAlg.create[F]
       implicit val versionsCache: VersionsCache[F] =
         new VersionsCache[F](config.cacheTtl, versionsStore)
       implicit val updateAlg: UpdateAlg[F] = new UpdateAlg[F]
