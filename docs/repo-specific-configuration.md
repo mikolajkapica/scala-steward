@@ -138,8 +138,8 @@ updates.pin  = [ { groupId = "com.example", artifactId="foo", version = "1.1." }
 # Each pattern must have `groupId`, and may have `artifactId` and `version`.
 # Defaults to empty `[]` which mean Scala Steward will not ignore dependencies.
 updates.ignore = [
-  { groupId = "org.acme", artifactId="foo", version = "1.0" },
-  { groupId = "*", version = "major" }
+  { groupId = "org.acme", artifactId = "foo", version = "1.0" },
+  { groupId = "*", version = { change = "major" } }
 ]
 
 # Scala Steward will ignore dependency update versions while they are newer than
@@ -284,14 +284,13 @@ signoffCommits = true
 ```
 
 The version information given in the patterns above can be in two formats:
-1. just a `version` field that is treated as a prefix of the version, or as `change` if it is
-   `major`, `minor`, `patch`, `pre-release` or `build-metadata`
+1. just a `version` field that is treated as a prefix of the version
 2. a structure consisting of any of the following fields:
    * `prefix`: is matched against the beginning of the version
    * `suffix`: is matched against the end of the version
    * `exact`: is matched against the whole version
    * `contains`: is matched against substrings in the version
-   * `change`: is matched against the kind of update, like the `version` filter of `pullRequests.grouping`
+   * `change`: is matched against early SemVer (`major`, `minor`, `patch`, `pre-release`, `build-metadata`)
 
 ```properties
 version = "1.1."

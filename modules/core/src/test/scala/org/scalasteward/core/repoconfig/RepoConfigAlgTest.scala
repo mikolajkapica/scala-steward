@@ -54,7 +54,7 @@ class RepoConfigAlgTest extends FunSuite {
          |               ]
          |updates.ignore = [
          |  { groupId = "org.acme", version = "1.0" },
-         |  { groupId = "*", version = "major" },
+         |  { groupId = "*", version = { change = "major" } },
          |  { groupId = "eu.timepit", version = { prefix = "0.", change = "minor" } }
          |]
          |updates.allowPreReleases = [ { groupId = "eu.timepit" } ]
@@ -477,5 +477,11 @@ class RepoConfigAlgTest extends FunSuite {
       ).some
     )
     assertEquals(config, Right(expected))
+  }
+
+  test("config with invalid version change reports allowed values") {
+    val content = """updates.ignore = [ { groupId = "*", version = { change = "Major" } } ]"""
+    val obtained = RepoConfigAlg.parseRepoConfig(content).leftMap(_.getMessage)
+    assert(clue(obtained).swap.exists(_.contains("Allowed values are")))
   }
 }
