@@ -1004,19 +1004,19 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
       ).some
     )
 
-    val major = ("com.example".g % "widgets".a % "2.10.0" %> Nel.of("3.1.0")).single
+    val major = ("com.example".g % "widgets".a % "1.0.0" %> Nel.of("2.1.0")).single
     assertEquals(
       localFilter(major, config, currentTime, cooldownExempt = None),
       Left(IgnoredByConfig(major))
     )
 
-    val minor = ("com.example".g % "widgets".a % "3.0.0" %> Nel.of("3.1.0")).single
+    val minor = ("com.example".g % "widgets".a % "2.0.0" %> Nel.of("2.1.0")).single
     assertEquals(
       localFilter(minor, config, currentTime, cooldownExempt = None),
       Right(minor.asSoleUpdate)
     )
 
-    val earlyMajor = ("com.example".g % "widgets".a % "0.23.1" %> Nel.of("0.24.0")).single
+    val earlyMajor = ("com.example".g % "widgets".a % "0.1.0" %> Nel.of("0.2.0")).single
     assertEquals(
       localFilter(earlyMajor, config, currentTime, cooldownExempt = None),
       Left(IgnoredByConfig(earlyMajor))
@@ -1032,10 +1032,10 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
       ).some
     )
 
-    val update = ("com.example".g % "widgets".a % "2.10.0" %> Nel.of("2.10.1", "2.11.0")).single
+    val update = ("com.example".g % "widgets".a % "1.0.0" %> Nel.of("1.0.1", "1.1.0")).single
     assertEquals(
       localFilter(update, config, currentTime, cooldownExempt = None),
-      Right(update.asSpecificUpdate("2.11.0".v))
+      Right(update.asSpecificUpdate("1.1.0".v))
     )
   }
 
@@ -1054,8 +1054,8 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
     )
 
     val major =
-      ("com.example".g % "widgets".a % "2.10.0" %> VersionWithFirstSeen(
-        "3.0.0".v,
+      ("com.example".g % "widgets".a % "1.0.0" %> VersionWithFirstSeen(
+        "2.0.0".v,
         Some(Timestamp(9))
       )).single
     assertEquals(
@@ -1064,8 +1064,8 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
     )
 
     val minor =
-      ("com.example".g % "widgets".a % "2.10.0" %> VersionWithFirstSeen(
-        "2.11.0".v,
+      ("com.example".g % "widgets".a % "1.0.0" %> VersionWithFirstSeen(
+        "1.1.0".v,
         Some(Timestamp(9))
       )).single
     assertEquals(
