@@ -1004,19 +1004,19 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
       ).some
     )
 
-    val major = ("org.typelevel".g % "cats-core".a % "2.10.0" %> Nel.of("3.1.0")).single
+    val major = ("com.example".g % "widgets".a % "2.10.0" %> Nel.of("3.1.0")).single
     assertEquals(
       localFilter(major, config, currentTime, cooldownExempt = None),
       Left(IgnoredByConfig(major))
     )
 
-    val minor = ("org.typelevel".g % "cats-core".a % "3.0.0" %> Nel.of("3.1.0")).single
+    val minor = ("com.example".g % "widgets".a % "3.0.0" %> Nel.of("3.1.0")).single
     assertEquals(
       localFilter(minor, config, currentTime, cooldownExempt = None),
       Right(minor.asSoleUpdate)
     )
 
-    val earlyMajor = ("org.http4s".g % "http4s-core".a % "0.23.1" %> Nel.of("0.24.0")).single
+    val earlyMajor = ("com.example".g % "widgets".a % "0.23.1" %> Nel.of("0.24.0")).single
     assertEquals(
       localFilter(earlyMajor, config, currentTime, cooldownExempt = None),
       Left(IgnoredByConfig(earlyMajor))
@@ -1032,7 +1032,7 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
       ).some
     )
 
-    val update = ("org.typelevel".g % "cats-core".a % "2.10.0" %> Nel.of("2.10.1", "2.11.0")).single
+    val update = ("com.example".g % "widgets".a % "2.10.0" %> Nel.of("2.10.1", "2.11.0")).single
     assertEquals(
       localFilter(update, config, currentTime, cooldownExempt = None),
       Right(update.asSpecificUpdate("2.11.0".v))
@@ -1045,7 +1045,7 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
         GroupRepoConfig(
           cooldown = CooldownConfig(7.days).some,
           dependency = UpdatePattern(
-            "org.typelevel".g,
+            "com.example".g,
             None,
             VersionPattern(change = SemVer.Change.Major.some).some
           )
@@ -1054,7 +1054,7 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
     )
 
     val major =
-      ("org.typelevel".g % "cats-core".a % "2.10.0" %> VersionWithFirstSeen(
+      ("com.example".g % "widgets".a % "2.10.0" %> VersionWithFirstSeen(
         "3.0.0".v,
         Some(Timestamp(9))
       )).single
@@ -1064,7 +1064,7 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
     )
 
     val minor =
-      ("org.typelevel".g % "cats-core".a % "2.10.0" %> VersionWithFirstSeen(
+      ("com.example".g % "widgets".a % "2.10.0" %> VersionWithFirstSeen(
         "2.11.0".v,
         Some(Timestamp(9))
       )).single

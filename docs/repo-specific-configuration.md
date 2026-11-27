@@ -290,7 +290,7 @@ The version information given in the patterns above can be in two formats:
    * `suffix`: is matched against the end of the version
    * `exact`: is matched against the whole version
    * `contains`: is matched against substrings in the version
-   * `change`: is matched against the kind of update (`major`, `minor`, `patch`, `pre-release`, `build-metadata`), using early SemVer
+   * `change`: is matched against the kind of update, like `major` or `patch`
 
 ```properties
 version = "1.1."
