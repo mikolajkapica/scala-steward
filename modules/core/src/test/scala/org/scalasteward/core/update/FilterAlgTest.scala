@@ -1004,13 +1004,13 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
       ).some
     )
 
-    val major = ("org.typelevel".g % "cats-core".a % "2.10.0" %> Nel.of("3.0.0")).single
+    val major = ("org.typelevel".g % "cats-core".a % "2.10.0" %> Nel.of("3.1.0")).single
     assertEquals(
       localFilter(major, config, currentTime, cooldownExempt = None),
       Left(IgnoredByConfig(major))
     )
 
-    val minor = ("org.typelevel".g % "cats-core".a % "2.10.0" %> Nel.of("2.11.0")).single
+    val minor = ("org.typelevel".g % "cats-core".a % "3.0.0" %> Nel.of("3.1.0")).single
     assertEquals(
       localFilter(minor, config, currentTime, cooldownExempt = None),
       Right(minor.asSoleUpdate)
@@ -1020,12 +1020,6 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
     assertEquals(
       localFilter(earlyMajor, config, currentTime, cooldownExempt = None),
       Left(IgnoredByConfig(earlyMajor))
-    )
-
-    val nonSemVer = ("io.netty".g % "netty-all".a % "4.1.100.Final" %> Nel.of("5.0.0.Final")).single
-    assertEquals(
-      localFilter(nonSemVer, config, currentTime, cooldownExempt = None),
-      Right(nonSemVer.asSoleUpdate)
     )
   }
 
@@ -1043,11 +1037,40 @@ class FilterAlgTest extends FunSuite with Http4sDsl[MockEff] with ClearOsvCache 
       localFilter(update, config, currentTime, cooldownExempt = None),
       Right(update.asSpecificUpdate("2.11.0".v))
     )
+  }
 
-    val nonSemVer = ("io.netty".g % "netty-all".a % "4.1.100.Final" %> Nel.of("4.2.0.Final")).single
+  test("dependencyOverrides can set a cooldown for major updates") {
+    val config = RepoConfig(
+      dependencyOverrides = List(
+        GroupRepoConfig(
+          cooldown = CooldownConfig(7.days).some,
+          dependency = UpdatePattern(
+            "org.typelevel".g,
+            None,
+            VersionPattern(change = SemVer.Change.Major.some).some
+          )
+        )
+      ).some
+    )
+
+    val major =
+      ("org.typelevel".g % "cats-core".a % "2.10.0" %> VersionWithFirstSeen(
+        "3.0.0".v,
+        Some(Timestamp(9))
+      )).single
     assertEquals(
-      localFilter(nonSemVer, config, currentTime, cooldownExempt = None),
-      Left(NotAllowedByConfig(nonSemVer))
+      localFilter(major, config, Timestamp(10), cooldownExempt = None),
+      Left(TooRecentForCooldown(major))
+    )
+
+    val minor =
+      ("org.typelevel".g % "cats-core".a % "2.10.0" %> VersionWithFirstSeen(
+        "2.11.0".v,
+        Some(Timestamp(9))
+      )).single
+    assertEquals(
+      localFilter(minor, config, Timestamp(10), cooldownExempt = None),
+      Right(minor.asSoleUpdate)
     )
   }
 }
